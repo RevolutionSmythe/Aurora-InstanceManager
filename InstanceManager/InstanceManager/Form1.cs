@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
@@ -15,25 +16,67 @@ namespace InstanceManager
     {
         private List<string> list = new List<string> ();
         private string m_selectedInstance = "";
-        private static string DefaultInstanceText = @"[RegionStartup]
+        private static string DefaultInstanceText = @"[Startup]
+AutoRestartOnCrash = false
+[Console]
+Console = GUIConsole
+[RegionStartup]
 Default = RegionLoaderFileSystem
 RegionsDirectory = Regions";
+        private volatile bool listLocked = false;
+        private bool m_formLoaded = false;
+        private static List<string> toAppend = new List<string> ();
+        private string m_selectedConsoleInstance = "";
+        private Dictionary<string, Process> m_processes = new Dictionary<string, Process> ();
+        private Thread consoleTracker = null;
+        private bool closing = false;
 
         public Form1 ()
         {
             InitializeComponent ();
         }
 
+        protected override void WndProc (ref Message m)
+        {
+            base.WndProc (ref m);
+            if (!m_formLoaded)
+                return;
+            if (listLocked)
+                return;
+            listLocked = true;
+
+            if (toAppend.Count > 0)
+            {
+                foreach (string line in toAppend)
+                    richTextBox1.AppendText (line);
+                toAppend.Clear ();
+            }
+
+            listLocked = false;
+        }
+
         private void Form1_Load (object sender, EventArgs e)
         {
+            m_formLoaded = true;
             LoadFromConfig ();
             RegenerateList ();
+            this.FormClosing += new FormClosingEventHandler (Form1_FormClosing);
+        }
+
+        void Form1_FormClosing (object sender, FormClosingEventArgs e)
+        {
+            closing = true;
         }
 
         private void LoadFromConfig ()
         {
             if (!File.Exists ("Settings.txt"))
                 return;
+
+            if (File.Exists (Path.Combine (ConfigFilePath.Text, "DefaultInstance.ini")))
+                File.Delete (Path.Combine (ConfigFilePath.Text, "DefaultInstance.ini"));
+            File.WriteAllText (Path.Combine (ConfigFilePath.Text, "DefaultInstance.ini"), DefaultInstanceText);
+
             string[] lines = File.ReadAllLines ("Settings.txt");
             foreach (string line in lines)
             {
@@ -114,10 +157,6 @@ RegionsDirectory = Regions";
             }
 
             #endregion
-
-            if (File.Exists (Path.Combine (ConfigFilePath.Text, "DefaultInstance.ini")))
-                File.Delete (Path.Combine (ConfigFilePath.Text, "DefaultInstance.ini"));
-            File.WriteAllText (Path.Combine (ConfigFilePath.Text, "DefaultInstance.ini"), DefaultInstanceText);
         }
 
         private void button4_Click (object sender, EventArgs e)
@@ -137,7 +176,14 @@ RegionsDirectory = Regions";
             listBox1.Items.Clear ();
             foreach (string i in list)
             {
-                listBox1.Items.Add (i);
+                if (File.Exists (Path.Combine (ConfigFilePath.Text, i)))
+                    listBox1.Items.Add (i);
+            }
+            listBox2.Items.Clear ();
+            foreach (string i in list)
+            {
+                if (File.Exists (Path.Combine (ConfigFilePath.Text, i)))
+                    listBox2.Items.Add (i);
             }
         }
 
@@ -190,13 +236,32 @@ RegionsDirectory = Regions";
             }
         }
 
+        private void listBox2_SelectedIndexChanged (object sender, EventArgs e)
+        {
+            if (listBox2.SelectedItem == null)
+            {
+                m_selectedConsoleInstance = "";
+            }
+            else
+            {
+                m_selectedConsoleInstance = listBox2.SelectedItem.ToString ();
+                string[] lines = File.ReadAllLines (Path.Combine (ConfigFilePath.Text, m_selectedConsoleInstance));
+                List<string> newLines = new List<string> (lines.Length);
+                foreach (string line in lines)
+                {
+                    if (line.Contains ("RegionsDirectory = "))
+                        RegionsDir.Text = line.Replace ("RegionsDirectory = ", "");
+                }
+            }
+        }
+
         private void button6_Click (object sender, EventArgs e)
         {
-            if (m_selectedInstance != "")
+            if (m_selectedConsoleInstance != "")
             {
-                list.Remove (m_selectedInstance);
-                File.Delete (Path.Combine (ConfigFilePath.Text, m_selectedInstance));
-                m_selectedInstance = null;
+                list.Remove (m_selectedConsoleInstance);
+                File.Delete (Path.Combine (ConfigFilePath.Text, m_selectedConsoleInstance));
+                m_selectedConsoleInstance = null;
                 SaveToConfig ();
                 RegenerateList ();
             }
@@ -205,17 +270,88 @@ RegionsDirectory = Regions";
         private void button5_Click (object sender, EventArgs e)
         {
             ProcessStartInfo info = new ProcessStartInfo (Path.Combine(AuroraPath.Text, "Aurora.exe"));
-            info.Arguments = "-mainIniDirectory=" + ConfigFilePath.Text + " -secondaryIniFileName=" + m_selectedInstance;
-            info.UseShellExecute = true;
-            Process.Start (info);
+            info.Arguments = "-mainIniDirectory=" + ConfigFilePath.Text + " -secondaryIniFileName=" + m_selectedConsoleInstance;
+            info.UseShellExecute = false;
+            info.CreateNoWindow = true;
+            info.RedirectStandardError = true;
+            info.RedirectStandardInput = true;
+            info.RedirectStandardOutput = true;
+            Process p = Process.Start (info);
+            m_processes.Add (m_selectedConsoleInstance, p);
+            consoleTracker = new Thread (ConsoleTracker);
+            consoleTracker.Start ();
         }
-
+        
         private void button8_Click (object sender, EventArgs e)
         {
             ProcessStartInfo info = new ProcessStartInfo (Path.Combine (AuroraPath.Text, "Aurora32bitLaunch.exe"));
-            info.Arguments = "-mainIniDirectory=" + ConfigFilePath.Text + " -secondaryIniFileName=" + m_selectedInstance;
+            info.Arguments = "-mainIniDirectory=" + ConfigFilePath.Text + " -secondaryIniFileName=" + m_selectedConsoleInstance;
             info.UseShellExecute = true;
-            Process.Start (info);
+            info.CreateNoWindow = true;
+            info.RedirectStandardError = true;
+            info.RedirectStandardInput = true;
+            info.RedirectStandardOutput = true;
+            Process p = Process.Start (info);
+            m_processes.Add (m_selectedConsoleInstance, p);
+            consoleTracker = new Thread (ConsoleTracker);
+            consoleTracker.Start ();
+        }
+
+        private void ConsoleTracker ()
+        {
+            while (true)
+            {
+                if (closing)
+                {
+                    foreach (Process p in m_processes.Values)
+                    {
+                        if(!p.HasExited)
+                            p.Kill ();
+                    }
+                    break;
+                }
+                if (m_selectedConsoleInstance != "")
+                {
+                    if (m_processes.ContainsKey (m_selectedConsoleInstance))
+                    {
+                        char[] buff = new char[1];
+                        m_processes[m_selectedConsoleInstance].StandardOutput.Read (buff, 0, 1);
+                    wait:
+                        string line = new string (buff);
+                        if (line == null || m_processes[m_selectedConsoleInstance].HasExited)
+                        {
+                            m_processes.Remove (m_selectedConsoleInstance);
+                            continue;
+                        }
+                        if (buff[0] == (char)0)
+                            continue;
+                        if (listLocked)
+                        {
+                            Thread.Sleep (1);
+                            goto wait;
+                        }
+                        toAppend.Add (line);
+                    }
+                }
+            }
+        }
+
+        private void button9_Click ()
+        {
+            if (m_selectedConsoleInstance != "")
+            {
+                if (m_processes.ContainsKey (m_selectedConsoleInstance))
+                {
+                    m_processes[m_selectedConsoleInstance].StandardInput.WriteLine (textBox1.Text);
+                    textBox1.Text = "";
+                }
+            }
+        }
+
+        private void textBox1_KeyDown (object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                button9_Click ();
         }
     }
 }
