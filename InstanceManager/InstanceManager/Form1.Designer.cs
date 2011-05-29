@@ -56,6 +56,9 @@
             this.button6 = new System.Windows.Forms.Button ();
             this.button5 = new System.Windows.Forms.Button ();
             this.listBox2 = new System.Windows.Forms.ListBox ();
+            this.HTTPPort = new System.Windows.Forms.TextBox ();
+            this.label5 = new System.Windows.Forms.Label ();
+            this.button9 = new System.Windows.Forms.Button ();
             this.panel1.SuspendLayout ();
             this.panel2.SuspendLayout ();
             this.panel3.SuspendLayout ();
@@ -170,7 +173,6 @@
             this.initoGenerateName.Name = "initoGenerateName";
             this.initoGenerateName.Size = new System.Drawing.Size (215, 20);
             this.initoGenerateName.TabIndex = 1;
-            this.initoGenerateName.TextChanged += new System.EventHandler (this.initoGenerateName_TextChanged);
             // 
             // button4
             // 
@@ -219,6 +221,9 @@
             // 
             // panel3
             // 
+            this.panel3.Controls.Add (this.button9);
+            this.panel3.Controls.Add (this.label5);
+            this.panel3.Controls.Add (this.HTTPPort);
             this.panel3.Controls.Add (this.listBox1);
             this.panel3.Controls.Add (this.RegionsDir);
             this.panel3.Controls.Add (this.button7);
@@ -278,6 +283,8 @@
             // 
             this.richTextBox1.Location = new System.Drawing.Point (132, 6);
             this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.ReadOnly = true;
+            this.richTextBox1.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
             this.richTextBox1.Size = new System.Drawing.Size (574, 221);
             this.richTextBox1.TabIndex = 13;
             this.richTextBox1.Text = "";
@@ -333,6 +340,32 @@
             this.listBox2.TabIndex = 10;
             this.listBox2.SelectedIndexChanged += new System.EventHandler (this.listBox2_SelectedIndexChanged);
             // 
+            // HTTPPort
+            // 
+            this.HTTPPort.Location = new System.Drawing.Point (256, 20);
+            this.HTTPPort.Name = "HTTPPort";
+            this.HTTPPort.Size = new System.Drawing.Size (100, 20);
+            this.HTTPPort.TabIndex = 15;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point (253, 4);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size (58, 13);
+            this.label5.TabIndex = 16;
+            this.label5.Text = "HTTP Port";
+            // 
+            // button9
+            // 
+            this.button9.Location = new System.Drawing.Point (256, 42);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size (75, 23);
+            this.button9.TabIndex = 17;
+            this.button9.Text = "Update";
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler (this.button9_Click_1);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF (6F, 13F);
@@ -387,6 +420,9 @@
         private System.Windows.Forms.ListBox listBox2;
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox HTTPPort;
+        private System.Windows.Forms.Button button9;
     }
 }
 

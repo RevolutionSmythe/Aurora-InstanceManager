@@ -20,6 +20,8 @@ namespace InstanceManager
 AutoRestartOnCrash = false
 [Console]
 Console = GUIConsole
+[Network]
+http_listener_port = 9000
 [RegionStartup]
 Default = RegionLoaderFileSystem
 RegionsDirectory = Regions";
@@ -30,6 +32,7 @@ RegionsDirectory = Regions";
         private Dictionary<string, Process> m_processes = new Dictionary<string, Process> ();
         private Thread consoleTracker = null;
         private bool closing = false;
+        private bool ResetTextBox = false;
 
         public Form1 ()
         {
@@ -45,11 +48,20 @@ RegionsDirectory = Regions";
                 return;
             listLocked = true;
 
-            if (toAppend.Count > 0)
+            if (ResetTextBox)
             {
-                foreach (string line in toAppend)
+                richTextBox1.Clear ();
+                richTextBox1.SelectionStart = richTextBox1.Text.Length;
+                richTextBox1.ScrollToCaret ();
+                ResetTextBox = false;
+            }
+            string[] copy = new string[toAppend.Count];
+            toAppend.CopyTo (copy);
+            toAppend.Clear ();
+            if (copy.Length > 0)
+            {
+                foreach (string line in copy)
                     richTextBox1.AppendText (line);
-                toAppend.Clear ();
             }
 
             listLocked = false;
@@ -187,11 +199,6 @@ RegionsDirectory = Regions";
             }
         }
 
-        private void initoGenerateName_TextChanged (object sender, EventArgs e)
-        {
-
-        }
-
         private void button7_Click (object sender, EventArgs e)
         {
             if (m_selectedInstance == null)
@@ -210,7 +217,31 @@ RegionsDirectory = Regions";
             {
                 string newLine = line;
                 if (line.Contains ("RegionsDirectory = "))
-                    newLine = "RegionsDirectory = \"" + RegionsDir.Text + "\"";
+                    newLine = "RegionsDirectory = " + RegionsDir.Text;
+                newLines.Add (newLine);
+            }
+            File.WriteAllLines (Path.Combine (ConfigFilePath.Text, m_selectedInstance), newLines.ToArray ());
+        }
+
+        private void button9_Click_1 (object sender, EventArgs e)
+        {
+            if (m_selectedInstance == null)
+            {
+                MessageBox.Show ("Select an instance first");
+                return;
+            }
+
+            //Update regions dir
+            if (!Directory.Exists (RegionsDir.Text))
+                Directory.CreateDirectory (RegionsDir.Text);
+
+            string[] lines = File.ReadAllLines (Path.Combine (ConfigFilePath.Text, m_selectedInstance));
+            List<string> newLines = new List<string> (lines.Length);
+            foreach (string line in lines)
+            {
+                string newLine = line;
+                if (line.Contains ("http_listener_port = "))
+                    newLine = "http_listener_port = " + HTTPPort.Text + "";
                 newLines.Add (newLine);
             }
             File.WriteAllLines (Path.Combine (ConfigFilePath.Text, m_selectedInstance), newLines.ToArray ());
@@ -221,6 +252,7 @@ RegionsDirectory = Regions";
             if (listBox1.SelectedItem == null)
             {
                 RegionsDir.Text = "";
+                HTTPPort.Text = "";
                 m_selectedInstance = "";
             }
             else
@@ -232,6 +264,8 @@ RegionsDirectory = Regions";
                 {
                     if (line.Contains ("RegionsDirectory = "))
                         RegionsDir.Text = line.Replace ("RegionsDirectory = ", "");
+                    if (line.Contains ("http_listener_port = "))
+                        HTTPPort.Text = line.Replace ("http_listener_port = ", "");
                 }
             }
         }
@@ -245,13 +279,6 @@ RegionsDirectory = Regions";
             else
             {
                 m_selectedConsoleInstance = listBox2.SelectedItem.ToString ();
-                string[] lines = File.ReadAllLines (Path.Combine (ConfigFilePath.Text, m_selectedConsoleInstance));
-                List<string> newLines = new List<string> (lines.Length);
-                foreach (string line in lines)
-                {
-                    if (line.Contains ("RegionsDirectory = "))
-                        RegionsDir.Text = line.Replace ("RegionsDirectory = ", "");
-                }
             }
         }
 
@@ -278,8 +305,11 @@ RegionsDirectory = Regions";
             info.RedirectStandardOutput = true;
             Process p = Process.Start (info);
             m_processes.Add (m_selectedConsoleInstance, p);
-            consoleTracker = new Thread (ConsoleTracker);
-            consoleTracker.Start ();
+            if (consoleTracker == null)
+            {
+                consoleTracker = new Thread (ConsoleTracker);
+                consoleTracker.Start ();
+            }
         }
         
         private void button8_Click (object sender, EventArgs e)
@@ -293,12 +323,16 @@ RegionsDirectory = Regions";
             info.RedirectStandardOutput = true;
             Process p = Process.Start (info);
             m_processes.Add (m_selectedConsoleInstance, p);
-            consoleTracker = new Thread (ConsoleTracker);
-            consoleTracker.Start ();
+            if (consoleTracker == null)
+            {
+                consoleTracker = new Thread (ConsoleTracker);
+                consoleTracker.Start ();
+            }
         }
 
         private void ConsoleTracker ()
         {
+            string currentInstance = "";
             while (true)
             {
                 if (closing)
@@ -314,22 +348,21 @@ RegionsDirectory = Regions";
                 {
                     if (m_processes.ContainsKey (m_selectedConsoleInstance))
                     {
-                        char[] buff = new char[1];
-                        m_processes[m_selectedConsoleInstance].StandardOutput.Read (buff, 0, 1);
-                    wait:
-                        string line = new string (buff);
-                        if (line == null || m_processes[m_selectedConsoleInstance].HasExited)
+                        if (currentInstance != m_selectedConsoleInstance)
                         {
-                            m_processes.Remove (m_selectedConsoleInstance);
+                            ResetTextBox = true;
+                            currentInstance = m_selectedConsoleInstance;
+                        }
+                        char[] buff = new char[1];
+                        m_processes[currentInstance].StandardOutput.Read (buff, 0, 1);
+                        string line = new string (buff);
+                        if (line == null || m_processes[currentInstance].HasExited)
+                        {
+                            m_processes.Remove (currentInstance);
                             continue;
                         }
                         if (buff[0] == (char)0)
                             continue;
-                        if (listLocked)
-                        {
-                            Thread.Sleep (1);
-                            goto wait;
-                        }
                         toAppend.Add (line);
                     }
                 }
