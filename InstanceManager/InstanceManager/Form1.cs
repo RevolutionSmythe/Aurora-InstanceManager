@@ -29,10 +29,12 @@ RegionsDirectory = Regions";
         private bool m_formLoaded = false;
         private static List<string> toAppend = new List<string> ();
         private string m_selectedConsoleInstance = "";
+        private string m_previousSelectedConsoleInstance = "";
         private Dictionary<string, Process> m_processes = new Dictionary<string, Process> ();
         private Thread consoleTracker = null;
         private bool closing = false;
         private bool ResetTextBox = false;
+        private Dictionary<string, string> m_otherConsoles = new Dictionary<string, string> ();
 
         public Form1 ()
         {
@@ -50,14 +52,26 @@ RegionsDirectory = Regions";
 
             if (ResetTextBox)
             {
+                m_otherConsoles[m_previousSelectedConsoleInstance] = richTextBox1.Text;
                 richTextBox1.Clear ();
                 richTextBox1.SelectionStart = richTextBox1.Text.Length;
                 richTextBox1.ScrollToCaret ();
                 ResetTextBox = false;
+                m_previousSelectedConsoleInstance = m_selectedConsoleInstance;
+                if (m_otherConsoles.ContainsKey (m_selectedConsoleInstance))
+                {
+                    richTextBox1.Text = m_otherConsoles[m_selectedConsoleInstance];
+                    richTextBox1.SelectionStart = richTextBox1.Text.Length;
+                    richTextBox1.ScrollToCaret ();
+                }
             }
-            string[] copy = new string[toAppend.Count];
-            toAppend.CopyTo (copy);
-            toAppend.Clear ();
+            string[] copy;
+            lock (toAppend)
+            {
+                copy = new string[toAppend.Count];
+                toAppend.CopyTo (copy);
+                toAppend.Clear ();
+            }
             if (copy.Length > 0)
             {
                 foreach (string line in copy)
