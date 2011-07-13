@@ -310,25 +310,17 @@ RegionsDirectory = Regions";
 
         private void button5_Click (object sender, EventArgs e)
         {
-            ProcessStartInfo info = new ProcessStartInfo (Path.Combine(AuroraPath.Text, "Aurora.exe"));
-            info.Arguments = "-mainIniDirectory=" + ConfigFilePath.Text + " -secondaryIniFileName=" + m_selectedConsoleInstance;
-            info.UseShellExecute = false;
-            info.CreateNoWindow = true;
-            info.RedirectStandardError = true;
-            info.RedirectStandardInput = true;
-            info.RedirectStandardOutput = true;
-            Process p = Process.Start (info);
-            m_processes.Add (m_selectedConsoleInstance, p);
-            if (consoleTracker == null)
-            {
-                consoleTracker = new Thread (ConsoleTracker);
-                consoleTracker.Start ();
-            }
+            StartAurora ("Aurora.exe");
         }
         
         private void button8_Click (object sender, EventArgs e)
         {
-            ProcessStartInfo info = new ProcessStartInfo (Path.Combine (AuroraPath.Text, "Aurora32bitLaunch.exe"));
+            StartAurora ("Aurora32bitLaunch.exe");
+        }
+
+        private void StartAurora (string name)
+        {
+            ProcessStartInfo info = new ProcessStartInfo (Path.Combine (AuroraPath.Text, name));
             info.Arguments = "-mainIniDirectory=" + ConfigFilePath.Text + " -secondaryIniFileName=" + m_selectedConsoleInstance;
             info.UseShellExecute = true;
             info.CreateNoWindow = true;
@@ -399,6 +391,16 @@ RegionsDirectory = Regions";
         {
             if (e.KeyCode == Keys.Enter)
                 button9_Click ();
+        }
+
+        private void button11_Click (object sender, EventArgs e)
+        {
+            StartAurora ("mono Aurora.exe");
+        }
+
+        private void button10_Click (object sender, EventArgs e)
+        {
+            StartAurora ("mono Aurora32bitLaunch.exe");
         }
     }
 }
