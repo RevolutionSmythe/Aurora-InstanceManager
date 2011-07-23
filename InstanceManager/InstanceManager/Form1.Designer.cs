@@ -55,12 +55,13 @@
             this.textBox1 = new System.Windows.Forms.TextBox ();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox ();
             this.groupBox1 = new System.Windows.Forms.GroupBox ();
+            this.button10 = new System.Windows.Forms.Button ();
             this.button8 = new System.Windows.Forms.Button ();
             this.button6 = new System.Windows.Forms.Button ();
             this.button5 = new System.Windows.Forms.Button ();
-            this.listBox2 = new System.Windows.Forms.ListBox ();
-            this.button10 = new System.Windows.Forms.Button ();
             this.button11 = new System.Windows.Forms.Button ();
+            this.listBox2 = new System.Windows.Forms.ListBox ();
+            this.AutoRestartInstances = new System.Windows.Forms.CheckBox ();
             this.panel1.SuspendLayout ();
             this.panel2.SuspendLayout ();
             this.panel3.SuspendLayout ();
@@ -223,6 +224,7 @@
             // 
             // panel3
             // 
+            this.panel3.Controls.Add (this.AutoRestartInstances);
             this.panel3.Controls.Add (this.button9);
             this.panel3.Controls.Add (this.label5);
             this.panel3.Controls.Add (this.HTTPPort);
@@ -268,7 +270,7 @@
             this.tabControl1.Location = new System.Drawing.Point (0, 23);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size (720, 288);
+            this.tabControl1.Size = new System.Drawing.Size (720, 305);
             this.tabControl1.TabIndex = 16;
             // 
             // tabPage1
@@ -279,7 +281,7 @@
             this.tabPage1.Location = new System.Drawing.Point (4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding (3);
-            this.tabPage1.Size = new System.Drawing.Size (712, 262);
+            this.tabPage1.Size = new System.Drawing.Size (712, 279);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Set Up";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -293,7 +295,7 @@
             this.tabPage2.Location = new System.Drawing.Point (4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding (3);
-            this.tabPage2.Size = new System.Drawing.Size (712, 262);
+            this.tabPage2.Size = new System.Drawing.Size (712, 279);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Consoles";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -301,7 +303,7 @@
             // textBox1
             // 
             this.textBox1.AcceptsReturn = true;
-            this.textBox1.Location = new System.Drawing.Point (132, 239);
+            this.textBox1.Location = new System.Drawing.Point (132, 256);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size (574, 20);
             this.textBox1.TabIndex = 14;
@@ -313,7 +315,7 @@
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ReadOnly = true;
             this.richTextBox1.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
-            this.richTextBox1.Size = new System.Drawing.Size (574, 233);
+            this.richTextBox1.Size = new System.Drawing.Size (574, 250);
             this.richTextBox1.TabIndex = 13;
             this.richTextBox1.Text = "";
             // 
@@ -326,10 +328,20 @@
             this.groupBox1.Controls.Add (this.button11);
             this.groupBox1.Location = new System.Drawing.Point (8, 107);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size (118, 149);
+            this.groupBox1.Size = new System.Drawing.Size (118, 164);
             this.groupBox1.TabIndex = 12;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Options";
+            // 
+            // button10
+            // 
+            this.button10.Location = new System.Drawing.Point (6, 94);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size (106, 23);
+            this.button10.TabIndex = 14;
+            this.button10.Text = "Mono Start (32 bit)";
+            this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler (this.button10_Click);
             // 
             // button8
             // 
@@ -361,25 +373,6 @@
             this.button5.UseVisualStyleBackColor = true;
             this.button5.Click += new System.EventHandler (this.button5_Click);
             // 
-            // listBox2
-            // 
-            this.listBox2.FormattingEnabled = true;
-            this.listBox2.Location = new System.Drawing.Point (6, 6);
-            this.listBox2.Name = "listBox2";
-            this.listBox2.Size = new System.Drawing.Size (120, 95);
-            this.listBox2.TabIndex = 10;
-            this.listBox2.SelectedIndexChanged += new System.EventHandler (this.listBox2_SelectedIndexChanged);
-            // 
-            // button10
-            // 
-            this.button10.Location = new System.Drawing.Point (6, 94);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size (106, 23);
-            this.button10.TabIndex = 14;
-            this.button10.Text = "Mono Start (32 bit)";
-            this.button10.UseVisualStyleBackColor = true;
-            this.button10.Click += new System.EventHandler (this.button10_Click);
-            // 
             // button11
             // 
             this.button11.Location = new System.Drawing.Point (6, 69);
@@ -390,11 +383,33 @@
             this.button11.UseVisualStyleBackColor = true;
             this.button11.Click += new System.EventHandler (this.button11_Click);
             // 
+            // listBox2
+            // 
+            this.listBox2.FormattingEnabled = true;
+            this.listBox2.Location = new System.Drawing.Point (6, 6);
+            this.listBox2.Name = "listBox2";
+            this.listBox2.Size = new System.Drawing.Size (120, 95);
+            this.listBox2.TabIndex = 10;
+            this.listBox2.SelectedIndexChanged += new System.EventHandler (this.listBox2_SelectedIndexChanged);
+            // 
+            // AutoRestartInstances
+            // 
+            this.AutoRestartInstances.AutoSize = true;
+            this.AutoRestartInstances.Checked = true;
+            this.AutoRestartInstances.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.AutoRestartInstances.Location = new System.Drawing.Point (132, 81);
+            this.AutoRestartInstances.Name = "AutoRestartInstances";
+            this.AutoRestartInstances.Size = new System.Drawing.Size (134, 17);
+            this.AutoRestartInstances.TabIndex = 16;
+            this.AutoRestartInstances.Text = "Auto Restart Instances";
+            this.AutoRestartInstances.UseVisualStyleBackColor = true;
+            this.AutoRestartInstances.CheckedChanged += new System.EventHandler (this.AutoRestartInstances_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF (6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size (718, 313);
+            this.ClientSize = new System.Drawing.Size (718, 328);
             this.Controls.Add (this.tabControl1);
             this.Name = "Form1";
             this.Text = "Form1";
@@ -449,6 +464,7 @@
         private System.Windows.Forms.Button button9;
         private System.Windows.Forms.Button button10;
         private System.Windows.Forms.Button button11;
+        private System.Windows.Forms.CheckBox AutoRestartInstances;
     }
 }
 

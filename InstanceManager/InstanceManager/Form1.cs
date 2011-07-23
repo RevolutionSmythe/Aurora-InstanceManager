@@ -334,6 +334,15 @@ RegionsDirectory = Regions";
                 consoleTracker = new Thread (ConsoleTracker);
                 consoleTracker.Start ();
             }
+
+            p.Exited += delegate(object sender, EventArgs e)
+            {
+                if (AutoRestartInstances.Checked)
+                {
+                    //Fire it again... keep up the loop
+                    StartAurora (name);
+                }
+            };
         }
 
         private void ConsoleTracker ()
