@@ -403,7 +403,6 @@
             this.AutoRestartInstances.TabIndex = 16;
             this.AutoRestartInstances.Text = "Auto Restart Instances";
             this.AutoRestartInstances.UseVisualStyleBackColor = true;
-            this.AutoRestartInstances.CheckedChanged += new System.EventHandler (this.AutoRestartInstances_CheckedChanged);
             // 
             // Form1
             // 
